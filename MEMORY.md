@@ -58,6 +58,35 @@ Nothing in this project has been executed on a GPU yet. Keep this table honest.
    the diarization notebook, so quality can be measured rather than asserted?
 4. Should the tested helper logic move out of notebook cells into a small
    importable module, so it can be tested in CI rather than by extracting cells?
+5. Bring `hebrew-diarization.ipynb` fully in line with the commenting rule
+   (`CLAUDE.md` rule 3)? It currently only half complies — see below.
+
+---
+
+## Known debt
+
+### Notebook only partly follows the commenting rule
+
+Rule 3 (explain reasoning for an amateur reader) was added on 2026-07-30, after
+the notebook was written. Current state, by cell:
+
+| Cell | State |
+|---|---|
+| Install | Good — says why torch is deliberately not pinned |
+| HF token | Good — explains why the lookup can fail |
+| Config | Weak — comments are section labels; the reasoning lives only in the markdown table above |
+| Find files | Weak — almost no comments |
+| ffmpeg prep | **Poor** — `# mono`, `# 16 kHz` restate the flags without saying *why* those values (both models expect 16 kHz mono; anything else is silently resampled) |
+| Load models | Weak — no explanation of the float16/int8 choice |
+| Helpers | Good — covers the tie-break, the sorted-list `break`, gap inheritance, and the millisecond maths |
+| Transcribe + diarize | Good — explains the generator-to-list step and the exclusive view |
+| Write output | Adequate |
+
+### Config flags that likely violate the simplicity rule
+
+`WRITE_SRT` and `RTL_MARKS` are toggles for behaviour that could just always
+happen. They were added before rule 2 existed and are speculative generality of
+exactly the kind that rule warns against. Candidates for removal.
 
 ---
 
@@ -115,5 +144,13 @@ Nothing in this project has been executed on a GPU yet. Keep this table honest.
 **New rules established by the user this session**
 
 - Hypotheses before bug fixes, with an explicit test plan, before touching the
-  repo. Written into `CLAUDE.md`.
+  repo. (`CLAUDE.md` rule 1)
+- Prefer the simpler, shorter solution; justify the longer one if chosen.
+  (`CLAUDE.md` rule 2)
+- Comment the reasoning, not the mechanics, aimed at an amateur coder.
+  (`CLAUDE.md` rule 3)
 - Maintain `CLAUDE.md` and this file, updated periodically.
+
+Rules 2 and 3 arrived after `hebrew-diarization.ipynb` was written, so the
+notebook does not yet fully satisfy them. Gaps recorded under Known debt above
+rather than quietly fixed, since that is a scoped piece of work of its own.

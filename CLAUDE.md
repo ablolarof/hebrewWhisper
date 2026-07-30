@@ -33,14 +33,74 @@ label it explicitly as unverified — in the commit message and in `MEMORY.md`.
 This rule applies to bug fixes. It does not apply to new features, refactors,
 docs, or work the user has explicitly scoped.
 
-### 2. Distinguish verified from unverified
+### 2. Prefer the simpler, shorter solution
+
+When two approaches both work, take the smaller one. Fewer lines, fewer
+dependencies, fewer moving parts, fewer concepts the reader has to hold at once.
+
+If the longer option is chosen anyway, say why in one line — usually it will be
+correctness, a real edge case, or a clear error message that the short version
+loses. "It's more extensible" or "it's more general" is **not** a good enough
+reason here. This is a transcription notebook for researchers, not a framework;
+speculative generality is a cost with no payoff.
+
+Applied to this project specifically:
+
+- No class hierarchies or abstraction layers for things a plain function does.
+- No config framework. One config cell with plain variables is correct.
+- Don't add a dependency to save a handful of lines.
+- Don't handle cases that cannot occur. Do handle cases that produce a confusing
+  failure for the user.
+
+When proposing a fix or feature, if a shorter alternative exists and was
+rejected, mention it and why. That is more useful than presenting one option as
+though it were the only one.
+
+### 3. Explain the reasoning, not the mechanics
+
+Assume the reader is an amateur coder — comfortable running a notebook, not
+fluent in Python. Comments should explain **why** the code is shaped this way,
+because the *what* is usually already readable.
+
+Not this:
+
+```python
+# loop over the words
+for w in words:
+```
+
+But this:
+
+```python
+# A word can fall in a gap between diarization turns (a pause, a cough).
+# Rather than drop it or label it unknown, it inherits the previous speaker,
+# which is nearly always right in a two-person interview.
+```
+
+Prioritise explaining:
+
+- **Non-obvious choices.** Why `exclusive_speaker_diarization` and not the plain
+  view. Why 16 kHz mono. Why `language` is passed explicitly instead of
+  autodetected.
+- **Things that look wrong but are deliberate.** Integer-millisecond timestamp
+  maths, the `break` in the overlap loop, not pinning torch.
+- **Anything a past bug touched.** If it was fixed once, the comment should say
+  what went wrong, so it isn't reintroduced.
+- **Units and formats.** Seconds vs milliseconds, 0-based vs 1-based.
+
+Markdown cells carry the user-facing explanation in Hebrew; code comments carry
+the developer-facing reasoning in English. Both should be present. Keep comments
+short — a dense paragraph above every line is its own kind of unreadable, and
+would violate rule 2.
+
+### 4. Distinguish verified from unverified
 
 This project cannot be fully tested on the user's machine (see Environment).
 Anything not actually executed must be described as untested. Do not let a
 plausible-looking fix be reported as a working one. `MEMORY.md` tracks which
 claims have been confirmed by a real run.
 
-### 3. Don't pin `torch`
+### 5. Don't pin `torch`
 
 The original notebooks died precisely because they pinned an old torch against a
 newer platform. Use whatever PyTorch build the host (Kaggle) ships. Install only
