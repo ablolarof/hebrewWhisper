@@ -14,7 +14,7 @@ See `CLAUDE.md` for the working rules (notably: hypotheses before bug fixes).
 | **Phase** | Rebuilt diarization notebook written, awaiting first real run |
 | **Active file** | `Kaggle/hebrew-diarization.ipynb` |
 | **Blocking next step** | User runs the notebook on Kaggle and reports output |
-| **Last updated** | 2026-07-30 |
+| **Last updated** | 2026-07-30 (session 2) |
 
 ---
 
@@ -58,39 +58,66 @@ Nothing in this project has been executed on a GPU yet. Keep this table honest.
    the diarization notebook, so quality can be measured rather than asserted?
 4. Should the tested helper logic move out of notebook cells into a small
    importable module, so it can be tested in CI rather than by extracting cells?
-5. Bring `hebrew-diarization.ipynb` fully in line with the commenting rule
-   (`CLAUDE.md` rule 3)? It currently only half complies — see below.
-
 ---
 
 ## Known debt
 
-### Notebook only partly follows the commenting rule
-
-Rule 3 (explain reasoning for an amateur reader) was added on 2026-07-30, after
-the notebook was written. Current state, by cell:
-
-| Cell | State |
-|---|---|
-| Install | Good — says why torch is deliberately not pinned |
-| HF token | Good — explains why the lookup can fail |
-| Config | Weak — comments are section labels; the reasoning lives only in the markdown table above |
-| Find files | Weak — almost no comments |
-| ffmpeg prep | **Poor** — `# mono`, `# 16 kHz` restate the flags without saying *why* those values (both models expect 16 kHz mono; anything else is silently resampled) |
-| Load models | Weak — no explanation of the float16/int8 choice |
-| Helpers | Good — covers the tie-break, the sorted-list `break`, gap inheritance, and the millisecond maths |
-| Transcribe + diarize | Good — explains the generator-to-list step and the exclusive view |
-| Write output | Adequate |
-
-### Config flags that likely violate the simplicity rule
-
-`WRITE_SRT` and `RTL_MARKS` are toggles for behaviour that could just always
-happen. They were added before rule 2 existed and are speculative generality of
-exactly the kind that rule warns against. Candidates for removal.
+None outstanding. The rule 2 / rule 3 cleanup was completed on 2026-07-30 —
+see the log entry below.
 
 ---
 
 ## Log
+
+### 2026-07-30 — Session 2: rules 2 and 3, and the cleanup pass
+
+**Rules added** (full text in `CLAUDE.md`)
+
+- Rule 2, prefer the simpler and shorter solution. Includes the explicit
+  provision that "more extensible" or "more general" is not an acceptable
+  justification for the longer option, and that a rejected shorter alternative
+  should be named when proposing work.
+- Rule 3, comment the reasoning rather than the mechanics, pitched at an amateur
+  coder. Capped deliberately: a paragraph above every line would itself violate
+  rule 2.
+
+**Cleanup pass — notebook brought in line with both**
+
+Rule 2, two config toggles deleted:
+
+- `WRITE_SRT` and `RTL_MARKS` gated behaviour nobody would realistically switch
+  off. Removing them took out two config lines, a conditional expression
+  (`RLM = "‏" if RTL_MARKS else ""`) and an `if` branch in the writer loop.
+  The SRT file and the RTL marks are now simply always produced.
+
+Rule 3, reasoning added to the four cells the audit marked weak or poor:
+
+| Cell | What the comments now explain |
+|---|---|
+| Config | Why `/kaggle/working` specifically; why `language` is passed explicitly (ivrit-ai's language *detection* is degraded by its Hebrew training); what the three speaker knobs actually differ in; that speaker labels are arbitrary until you read the preview |
+| Find files | Why video extensions are accepted; why `rglob` and not `listdir` (zip uploads keep their folder structure); why both checks fail loudly rather than yielding a confusing empty result later |
+| ffmpeg prep | Why 16 kHz mono rather than restating the flags — both models want it and would convert anyway, so doing it once removes the manual conversion the original notebook demanded *and* guarantees both models see identical audio, so their timestamps line up; why a temp dir rather than the output folder |
+| Load models | What `compute_type` means and why float16 on GPU, int8 on CPU |
+
+Also improved: the RLM constant now explains what U+200F is and why every line
+needs it (timestamps mix digits into Hebrew text), and `write_srt` explains why
+its cues follow Whisper segments rather than the regrouped speaker blocks — a
+block can be a minute long, which reads fine on a page but is useless as a
+subtitle.
+
+**Verification**
+
+All 33 tests still pass unchanged (23 helper, 10 output), plus the nbformat and
+per-cell `ast.parse` checks. The pass touched comments, two config lines and one
+branch, so no test needed changing — which is the point of having had them.
+
+Net diff: +66 / -21. Longer in lines because comments were the deliverable;
+shorter in moving parts, which is what rule 2 actually asks for.
+
+One stale reference was caught on review: the troubleshooting table still told
+users to check `RTL_MARKS = True` after the variable had been deleted. Rewritten
+to describe the behaviour instead. Confirmed zero remaining occurrences of either
+removed name.
 
 ### 2026-07-30 — Session 1
 
