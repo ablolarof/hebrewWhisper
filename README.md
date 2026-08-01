@@ -10,6 +10,7 @@
 <thead><tr><th></th><th>תמלול בלבד</th><th>תמלול + זיהוי דוברים</th></tr></thead>
 <tbody>
 <tr><td><b>מחברת</b></td><td><a href="Kaggle/hebrew-transcription.ipynb">hebrew-transcription.ipynb</a></td><td><a href="Kaggle/hebrew-diarization.ipynb">hebrew-diarization.ipynb</a></td></tr>
+<tr><td><b>פתיחה</b></td><td><a href="https://kaggle.com/kernels/welcome?src=https://github.com/ablolarof/hebrewWhisper/blob/main/Kaggle/hebrew-transcription.ipynb"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open In Kaggle"/></a></td><td><a href="https://kaggle.com/kernels/welcome?src=https://github.com/ablolarof/hebrewWhisper/blob/main/Kaggle/hebrew-diarization.ipynb"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open In Kaggle"/></a></td></tr>
 <tr><td><b>מתאים ל</b></td><td>הרצאות, נאומים, פודקאסטים, כל הקלטה שבה לא חשוב מי מדבר</td><td>ראיונות, שיחות, דיונים — כשצריך לדעת מי אמר מה</td></tr>
 <tr><td><b>הרשמה נדרשת</b></td><td><b>אין.</b> רק חשבון Kaggle חינמי</td><td>גם חשבון <a href="https://huggingface.co">Hugging Face</a> חינמי (לצורך מודל זיהוי הדוברים)</td></tr>
 <tr><td><b>מהירות</b></td><td>מהירה יותר — כ-4 דקות לשעת אודיו</td><td>כ-6 דקות לשעת אודיו</td></tr>
@@ -22,7 +23,10 @@
 <li>רצות על <b>Kaggle</b> (כ-30 שעות GPU חינם בשבוע) במקום Google Colab</li>
 <li>משתמשות ב-<a href="https://huggingface.co/ivrit-ai/whisper-large-v3-turbo-ct2">ivrit-ai/whisper-large-v3-turbo-ct2</a> — מודל שכוונן לעברית, מדויק בהרבה מ-Whisper הרגיל</li>
 <li>מקבלות כל פורמט אודיו/וידאו — אין צורך להמיר ל-WAV ידנית</li>
-<li>מפיקות קובץ טקסט וקובץ כתוביות (<code>srt</code>), מיושרים נכון לעברית</li>
+<li><b>מאתרות את קבצי הקלט בעצמן</b> — אין צורך להקליד נתיב או לזכור שם של Dataset</li>
+<li>מפיקות 5 סוגי פלט: <code>txt</code>, <code>srt</code>, <code>vtt</code>, <code>tsv</code>, <code>json</code> — בחרו אחד או את כולם</li>
+<li>אפשרות לתמליל טקסט עם חותמות זמן או בלעדיהן</li>
+<li>הפלט מיושר נכון לעברית (RTL)</li>
 </ul>
 <p>המחברות המקוריות נשמרו בתיקיית <code>Colab</code> לצורך השוואה בלבד.</p>
 </blockquote>

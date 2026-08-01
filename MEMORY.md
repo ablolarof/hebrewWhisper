@@ -67,6 +67,8 @@ GPU            Tesla T4 x2
 | Speaker counting on *harder* audio | It got 3/3 right on this call. One sample. Two speakers with similar voices, or heavy background noise, are the cases that would break it. |
 | That `NUM_SPEAKERS = 1` is accepted by pyannote | Suggested as the single-speaker workaround but never tried. Some clustering implementations reject `n_clusters=1`. Moot now that a dedicated notebook exists, but the claim was made and never checked. |
 | Paragraph grouping reads well on *long* audio | The 45s / 2s pause thresholds are unit-tested and were fine on a short file. Whether they produce sensible paragraphs across a two-hour lecture is a judgement call nobody has made yet. |
+| **The session-5 usability changes work on Kaggle** | Auto-discovery, the five output formats, the timestamps switch and the Kaggle badges are covered by 110 unit tests but have **never been run**. Auto-discovery in particular touches `/kaggle/input` behaviour that cannot be reproduced locally. |
+| Whether files can actually be dropped into `/kaggle/working/audio` via the UI | The folder is created and searched, so it costs nothing if unsupported, but nobody has confirmed Kaggle's file browser allows uploads there. Datasets remain the documented route. |
 | large-v3-turbo + community-1 fit together in 16 GB VRAM | Should be comfortable on paper (~1.6 GB + ~1 GB), never measured. |
 | Hebrew transcription quality is actually better than vanilla Whisper | Claimed by ivrit.ai and third-party comparisons; not measured on the user's own audio. |
 | Diarization auto-detects the right speaker count on real interviews | Depends entirely on recording quality. |
@@ -98,6 +100,51 @@ see the log entry below.
 ---
 
 ## Log
+
+### 2026-08-01 — Session 5: usability pass on both notebooks
+
+Four user-requested changes, applied to both notebooks.
+
+**1. Input files are found automatically.** `INPUT_DIR = None` is now the
+default, and the notebook searches every attached Dataset plus a
+`/kaggle/working/audio/` folder it creates. Previously the user had to type a
+path that had to match a slugified dataset name exactly — and in practice they
+got it wrong twice, once pointing at a file instead of a folder and once using
+the website URL form rather than the mount path. Both failures were the design's
+fault, not theirs: the notebook had all the information needed to find the files
+and was asking anyway. Explicit paths still work for narrowing the search.
+
+**2. Five output formats.** `txt`, `srt`, `vtt`, `tsv`, `json`, selected with
+`OUTPUT_FORMATS = "all"` or a list. Unknown names raise immediately with the
+valid set rather than silently producing nothing.
+
+**3. Timestamps optional in txt.** `TXT_TIMESTAMPS = False` gives clean prose.
+Deliberately scoped to txt only — the subtitle and data formats are *defined* by
+their timestamps, so a global switch would be meaningless for four of five.
+
+**4. "Open in Kaggle" badges**, matching the old Colab badges, in both notebooks
+and in the README table.
+
+**On rules 2 and 3 pulling in opposite directions here.** Session 2 deleted
+`WRITE_SRT` and `RTL_MARKS` as speculative toggles; this session adds
+`OUTPUT_FORMATS` and `TXT_TIMESTAMPS`. That is not a reversal. The deleted ones
+gated behaviour nobody asked for and nobody would switch off. These come from a
+stated need with concrete uses — different downstream tools want different
+formats, and a prose transcript reads very differently from a timestamped one.
+Demonstrated need versus speculation is precisely the line rule 2 draws.
+
+**Also refactored:** per-segment speaker labels are now computed once after
+diarization and passed into the writers, rather than each writer re-deriving
+them. With one writer that was invisible; with four it would have been four
+passes over the same data.
+
+**Test coverage grew to 110 across five suites** (helpers 23, output 10,
+transcription 24, formats 36, discovery 17). The discovery tests build a fake
+Kaggle tree in a temp folder and check nested files, ignored extensions,
+uppercase extensions, single-file input, and that overlapping search roots do
+not produce duplicates.
+
+**Untested on Kaggle.** Every change here is verified only by unit test.
 
 ### 2026-08-01 — Session 4b: transcription notebook verified
 
