@@ -1,0 +1,20 @@
+# Working notes kept local, deliberately not published.
+# These are project state for whoever is developing the notebooks, not
+# documentation for people using them.
+CLAUDE.md
+MEMORY.md
+ROADMAP.md
+
+# Python / Jupyter noise
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Transcripts and audio, if anyone runs things locally
+transcriptions/
+*.wav
+*.mp3
+*.m4a
+*.mp4
