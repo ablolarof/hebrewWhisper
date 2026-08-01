@@ -70,6 +70,7 @@ GPU            Tesla T4 x2
 | Speaker counting on *harder* audio | It got 3/3 right on this call. One sample. Two speakers with similar voices, or heavy background noise, are the cases that would break it. |
 | That `NUM_SPEAKERS = 1` is accepted by pyannote | Suggested as the single-speaker workaround but never tried. Some clustering implementations reject `n_clusters=1`. Moot now that a dedicated notebook exists, but the claim was made and never checked. |
 | Paragraph grouping reads well on *long* audio | The 45s / 2s pause thresholds are unit-tested and were fine on a short file. Whether they produce sensible paragraphs across a two-hour lecture is a judgement call nobody has made yet. |
+| **That the numpy pin works** | Diagnosis is measured and certain (Kaggle ships 2.0.2, pyannote pulls 2.5.1, numpy is preloaded by the kernel). The *fix* has not run. Specific risk: pip may be unable to satisfy `pyannote.audio>=4.0.0` against numpy 2.0.2, turning an import failure into an install failure. The cell now checks pip's exit code so the two are distinguishable. |
 | That `vtt`, `tsv` and `json` load correctly in their **target applications** | The files are written and their structure is unit-tested, but nobody has opened a `.vtt` in a video player, a `.tsv` in Excel, or parsed the `.json` from another program. Format bugs of the kind unit tests miss (encoding, BOM expectations, header quirks) would only show up there. |
 | Whether files can actually be dropped into `/kaggle/working/audio` via the UI | The folder is created and searched, so it costs nothing if unsupported, but nobody has confirmed Kaggle's file browser allows uploads there. Datasets remain the documented route. |
 | Behaviour when several datasets are attached at once | Auto-discovery searches all of `/kaggle/input`, so unrelated attached datasets containing media would also be transcribed. Not yet seen in practice. |
@@ -104,6 +105,52 @@ see the log entry below.
 ---
 
 ## Log
+
+### 2026-08-01 — Session 7: numpy root cause found and pinned
+
+**The numpy ImportError is not a one-off.** It recurred on a second cold session
+of the diarization notebook, which is what justified diagnosing it properly
+rather than documenting a restart.
+
+**Diagnosis, confirmed by measurement:**
+
+```
+before cell 2:  numpy on disk 2.0.2   already loaded True
+after  cell 2:  numpy on disk 2.5.1   already loaded True
+```
+
+Kaggle ships numpy **2.0.2**; installing `pyannote.audio` upgrades it to
+**2.5.1**. The kernel has numpy loaded *before any notebook code runs* — the
+first probe reported `already loaded: True` having imported nothing but `sys`
+and `importlib`. So the process holds 2.0.2's compiled extension while 2.5.1's
+Python files sit on disk, and the halves disagree.
+
+This also explains the asymmetry: the transcription notebook installs only
+faster-whisper and has never hit it. pyannote is what drags numpy forward.
+
+**A hypothesis that the measurement killed.** One candidate fix was to drop the
+`import torch` from the install cell, on the theory that our own import was what
+loaded numpy first. `already loaded: True` on the very first probe refutes that
+— Kaggle preloads numpy at kernel startup, so nothing the notebook does or
+avoids doing changes it.
+
+**Fix applied: pin numpy to the version already installed**, dynamically rather
+than hardcoding 2.0.2, so a future Kaggle image update does not turn the pin
+into a forced downgrade. Applied to both notebooks — the transcription one has
+never triggered this, but the pin costs nothing and prevents it starting.
+
+Plus a verification step, which is the part likely to outlast the fix: after
+installing, the cell re-reads numpy's version and prints a loud, plain-language
+warning if it changed anyway. That converts any future recurrence from an
+`ImportError` five cells away into an instruction at the point of cause.
+`importlib.invalidate_caches()` is required before that re-read or the value is
+stale.
+
+**Untested.** The diagnosis is measured and certain; the fix is not. The
+specific risk is that pip cannot satisfy `pyannote.audio>=4.0.0` against
+numpy 2.0.2, in which case the install fails rather than the import. The cell
+now checks pip's exit code and says so, since a genuine failure is otherwise
+indistinguishable from the routine dependency-conflict wall.
 
 ### 2026-08-01 — Session 6: usability changes verified on Kaggle
 
