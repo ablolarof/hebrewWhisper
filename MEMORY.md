@@ -13,14 +13,16 @@ See `CLAUDE.md` for the working rules (notably: hypotheses before bug fixes).
 |---|---|
 | **Phase** | Rebuilt diarization notebook written, awaiting first real run |
 | **Active file** | `Kaggle/hebrew-diarization.ipynb` |
-| **Blocking next step** | User runs the notebook on Kaggle and reports output |
-| **Last updated** | 2026-07-30 (session 2) |
+| **Blocking next step** | User runs cells 3 onward on Kaggle and reports output |
+| **Last updated** | 2026-08-01 (session 3) |
 
 ---
 
 ## Verified vs unverified
 
-Nothing in this project has been executed on a GPU yet. Keep this table honest.
+Keep this table honest. As of 2026-08-01 the environment and install are
+confirmed on real Kaggle hardware; the transcription and diarization steps are
+still unrun.
 
 ### Verified
 
@@ -34,14 +36,28 @@ Nothing in this project has been executed on a GPU yet. Keep this table honest.
 | community-1 exposes `.exclusive_speaker_diarization` | Same |
 | Correct ivrit-ai model id is `ivrit-ai/whisper-large-v3-turbo-ct2` | Read from the model card |
 | Fork was identical to upstream at clone time | Both at `d8e7174` |
+| **The install cell works on Kaggle** | Run 2026-08-01. `%pip install` completed, all four packages import |
+| **cuDNN is compatible — no pin needed** | cuDNN 9.10.2 (`91002`) against ctranslate2 4.8.1, which wants cuDNN 9. They match |
+| **float16 is safe on the assigned GPU** | Tesla T4, compute capability 7.5, has FP16 tensor cores |
+| Kaggle free tier gives 2x Tesla T4, 15 GB VRAM each | `nvidia-smi`, 2026-08-01 |
+
+Environment as actually observed on Kaggle, 2026-08-01:
+
+```
+torch          2.10.0+cu128     (driver CUDA 13.0 — newer driver, older runtime, fine)
+faster-whisper 1.2.1
+pyannote.audio 4.0.7
+ctranslate2    4.8.1
+cuDNN          9.10.2
+GPU            Tesla T4 x2
+```
 
 ### Unverified — do not present these as working
 
 | Claim | Why it's uncertain |
 |---|---|
-| The notebook runs end to end on Kaggle | Never executed. No CUDA available locally. |
-| Kaggle's image has a cuDNN version faster-whisper/ctranslate2 accepts | Version-dependent and changes with Kaggle image updates. **This is the single most likely first failure.** |
-| `compute_type = "int8_float16"` fixes a cuDNN mismatch | **Untested hypothesis** currently sitting in the notebook's troubleshooting table. It was written before the hypotheses-first rule existed. If cuDNN does fail, treat this as a candidate to test, not a known fix. |
+| The notebook runs end to end | Cells 1-2 confirmed on Kaggle. Everything from the token cell onward is still unrun. |
+| numpy 2.5.1 coexists with numba 0.60.0, which requires numpy<2.1 | Flagged by pip on install. pyannote can reach numba via librosa. **Pre-registered as the next likely failure**: if a numpy/numba error appears, restart the session and re-run from cell 2 before considering any version pin. |
 | large-v3-turbo + community-1 fit together in 16 GB VRAM | Should be comfortable on paper (~1.6 GB + ~1 GB), never measured. |
 | Hebrew transcription quality is actually better than vanilla Whisper | Claimed by ivrit.ai and third-party comparisons; not measured on the user's own audio. |
 | Diarization auto-detects the right speaker count on real interviews | Depends entirely on recording quality. |
@@ -68,6 +84,43 @@ see the log entry below.
 ---
 
 ## Log
+
+### 2026-08-01 — Session 3: first Kaggle run, cuDNN risk resolved
+
+**The cuDNN risk did not materialise.** Diagnostic run before any change, as
+rule 1 requires. Result: cuDNN 9.10.2 against ctranslate2 4.8.1, which wants
+cuDNN 9 — they match. H1 refuted. H2 refuted too, on hardware grounds: the T4 is
+compute capability 7.5 with FP16 tensor cores, so `float16` is natively
+supported. H3 confirmed, no change needed.
+
+Worth recording *why* the protocol paid here. The pre-written fix for H1 was to
+pin `ctranslate2<4.5`. Applying that speculatively would have **downgraded the
+environment into the exact failure H1 described**, since 4.8.1 against cuDNN 9
+is already the correct pairing. The diagnostic cost seconds. The speculative fix
+would have cost a debugging session and looked like progress while doing it.
+
+Consequence: the `int8_float16` troubleshooting row is now known to be
+unnecessary on this hardware. Harmless as a fallback for other GPUs, so it
+stays, but it is no longer an open question.
+
+**`import google.colab` is not a valid Kaggle/Colab discriminator.** Kaggle's
+current image ships the `google-colab` package *and* a `/content` directory, so
+that import succeeds on Kaggle. A platform test built on it reported "Google
+Colab" on a machine that was definitively Kaggle, and cost a round trip.
+Reliable signals: `/kaggle` existing, or `KAGGLE_KERNEL_RUN_TYPE` in the
+environment. The `/kaggle exists: True` line in the same output was correct and
+was the one to trust.
+
+**The pip dependency-conflict wall is noise.** Those conflicts are between stock
+image packages (`bigframes`, `dopamine-rl`, `ydata-profiling`, `google-colab`)
+and predate our install — nothing in our chain is named. The one exception is
+numpy 2.5.1 vs numba, now in the unverified table.
+
+**Process note.** Editing this file with a PowerShell
+`Get-Content -Raw` / `Set-Content` round trip corrupted it: PS 5.1 reads a
+BOM-less file as Windows-1252, so writing it back double-encoded every em-dash
+and the Hebrew RLM character. Reverted with `git checkout` and redone with the
+editor. Use the file-editing tool on these documents, not shell round trips.
 
 ### 2026-07-30 — Session 2: rules 2 and 3, and the cleanup pass
 
