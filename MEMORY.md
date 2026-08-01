@@ -11,9 +11,9 @@ See `CLAUDE.md` for the working rules (notably: hypotheses before bug fixes).
 
 | | |
 |---|---|
-| **Phase** | **Phase 0 complete** — notebook runs end to end on Kaggle. Moving to Phase 1 (quality) |
+| **Phase** | **Phase 0 complete and merged to `main`.** Moving to Phase 1 (measured quality) |
 | **Active file** | `Kaggle/hebrew-diarization.ipynb` |
-| **Blocking next step** | Confirm whether the 3rd detected speaker is real or an artifact |
+| **Blocking next step** | Run on a real interview; then Phase 1.2 (WER) and 1.3 (ivrit-ai vs plain large-v3) |
 | **Last updated** | 2026-08-01 (session 3) |
 
 ---
@@ -41,6 +41,7 @@ still unrun.
 | **float16 is safe on the assigned GPU** | Tesla T4, compute capability 7.5, has FP16 tensor cores |
 | Kaggle free tier gives 2x Tesla T4, 15 GB VRAM each | `nvidia-smi`, 2026-08-01 |
 | **The notebook runs end to end on Kaggle** | Full run 2026-08-01. 3.5 min WhatsApp screen recording in, txt + srt out, downloaded successfully |
+| **Automatic speaker counting was correct** | Detected 3 speakers with no hint given; user confirmed the call genuinely had 3. This is the payoff for community-1 over the old fixed-`num_speakers` approach, which would have forced 3 people into however many buckets were guessed |
 | ffmpeg correctly strips video and keeps audio | The input was an `.mp4` screen recording; cell 6 reported 3.5 min of audio |
 | **Throughput is ~9.5x realtime end to end** | 3.5 min audio → 22s total (9s transcribe, 12s diarize) on one T4. Extrapolates to ~6 min per hour of audio |
 | Both models fit comfortably on one T4 | No OOM at 15 GB with both loaded |
@@ -60,8 +61,9 @@ GPU            Tesla T4 x2
 
 | Claim | Why it's uncertain |
 |---|---|
-| Transcription quality on Hebrew | The pipeline produced output; the *accuracy* of that output has not been judged yet. Phase 1. |
-| Whether automatic speaker counting is trustworthy | First run detected 3 speakers in a WhatsApp screen recording. Unknown whether that is correct. See open question 1. |
+| Hebrew accuracy as a **number** | User read the first transcript and called it "pretty good" — a real signal, and the first evidence that the Hebrew works at all, but not a measurement. Phase 1.2 (WER against a ground truth) is still the thing that would make this a claim rather than an impression. |
+| Whether the ivrit-ai finetune beats plain `large-v3` | Still untested. "Pretty good" does not tell us whether the standard model would have been equally good. Phase 1.3. |
+| Speaker counting on *harder* audio | It got 3/3 right on this call. One sample. Two speakers with similar voices, or heavy background noise, are the cases that would break it. |
 | large-v3-turbo + community-1 fit together in 16 GB VRAM | Should be comfortable on paper (~1.6 GB + ~1 GB), never measured. |
 | Hebrew transcription quality is actually better than vanilla Whisper | Claimed by ivrit.ai and third-party comparisons; not measured on the user's own audio. |
 | Diarization auto-detects the right speaker count on real interviews | Depends entirely on recording quality. |
@@ -70,14 +72,12 @@ GPU            Tesla T4 x2
 
 ## Open questions
 
-1. **Is the 3rd speaker in the first test run real?** The recording is a WhatsApp
-   screen capture; pyannote reported `SPEAKER_00/01/02`. Two candidate
-   explanations, and a cheap test that separates them: print blocks and total
-   airtime per speaker. A sub-second single block points at the NaN-embedding
-   artifact behind the `std(): degrees of freedom is <= 0` warning; meaningful
-   airtime means a genuine third voice, plausibly someone on a phone speaker.
-   If artifact, `NUM_SPEAKERS = 2` is the workaround, and a minimum-segment-length
-   filter is the real fix.
+1. ~~Is the 3rd speaker in the first test run real?~~ **Resolved 2026-08-01: yes.**
+   The call genuinely had 3 participants and pyannote found all 3 unprompted. The
+   `std(): degrees of freedom is <= 0` warning was therefore *not* responsible for
+   a spurious cluster — it fired on some short segment without affecting the
+   outcome. Treat it as noise unless a future run shows a speaker with negligible
+   airtime.
 2. Should the other three Colab notebooks (`Whisper_Audio`, `Whisper_Video`,
    `Whisper_from_Youtube`) get the same treatment, or is diarization the only
    one the user actually needs?
@@ -126,6 +126,26 @@ cell.** Any user hitting this cold will see the same crash. Not yet actioned.
 **Measured throughput: ~9.5x realtime**, 22s for 3.5 min of audio on one T4.
 About 6 minutes per hour of audio, so a 2 hour interview is ~13 minutes. The
 30 hr/week quota will not be the binding constraint.
+
+### 2026-08-01 — Session 3c: first results confirmed, branch merged to main
+
+**Speaker detection was correct.** The call really had 3 participants, and
+pyannote found all 3 without being told how many to look for. This is the
+clearest vindication so far of replacing the original ECAPA + AgglomerativeClustering
+approach: that method took `num_speakers` as a *required input*, so a user who
+guessed 2 would have had three people silently forced into two buckets with
+nothing in the output indicating a problem.
+
+**Hebrew transcription judged "pretty good" by the user.** First evidence the
+Hebrew path works at all. Deliberately *not* moved to the verified table as a
+quality claim — an impression from one 3.5 minute recording is not a WER, and
+it says nothing about whether plain `large-v3` would have done equally well.
+Phases 1.2 and 1.3 remain the things that would turn this into a real claim.
+
+**Merged `revive-diarization` into `main` and pushed.** The working notebook,
+CLAUDE.md, MEMORY.md and ROADMAP.md are now on the default branch, which also
+fixes Kaggle's GitHub import — it browses the default branch, and previously
+found nothing there.
 
 ### 2026-08-01 — Session 3: first Kaggle run, cuDNN risk resolved
 

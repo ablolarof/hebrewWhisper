@@ -74,7 +74,7 @@ suggests the H2 fix, which does nothing if H1 is the real cause.
 | 1.1 | Run on a real interview | First contact with messy audio |
 | 1.2 | Port the WER check from `Kaggle/kaggle-whisper-audio.ipynb` | Needs a hand-made ground-truth transcript of ~5 minutes. Tedious, and the only way to get a real number |
 | 1.3 | Compare `ivrit-ai/whisper-large-v3-turbo-ct2` against plain `large-v3` on the same file | Decides whether the Hebrew finetune earns its place. Currently an assumption |
-| 1.4 | Assess automatic speaker counting | Does it get 2 speakers right? When does `NUM_SPEAKERS` become necessary? |
+| 1.4 | Assess automatic speaker counting | **Partly answered 2026-08-01:** got 3/3 right on a WhatsApp call, unprompted. Remaining question is harder audio — similar-sounding voices, background noise |
 | 1.5 | Record the recommended settings in `CLAUDE.md` | So the answer is not re-derived later |
 
 **Exit criteria:** a WER figure for Hebrew, and a documented default config with
