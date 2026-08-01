@@ -100,7 +100,21 @@ Anything not actually executed must be described as untested. Do not let a
 plausible-looking fix be reported as a working one. `MEMORY.md` tracks which
 claims have been confirmed by a real run.
 
-### 5. Don't pin `torch`
+### 5. Don't pin `torch` — and be careful pinning anything else
+
+Pinning is rarely free on Kaggle. The image ships hundreds of packages, and an
+exact pin can force pip into a backtracking search for a compatible combination
+that takes minutes, or does not terminate usefully at all. The tell is repeated
+identical download sizes in pip's output: that is metadata for successive
+candidate versions being tried, not progress.
+
+- **Never pin `torch`.** The original notebooks died precisely because they
+  pinned an old torch against a newer platform. Use the host's build.
+- **Prefer `>=` minimums** on the few libraries layered on top.
+- **Do not pin to avoid a restart.** This was tried with numpy and reverted; the
+  resolve cost more than the restart it saved. If a package upgrade destabilises
+  the running kernel, detect it and tell the user to restart. That is cheap,
+  reliable, and does not fight the resolver.
 
 The original notebooks died precisely because they pinned an old torch against a
 newer platform. Use whatever PyTorch build the host (Kaggle) ships. Install only
