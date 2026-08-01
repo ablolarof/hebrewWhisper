@@ -11,9 +11,9 @@ See `CLAUDE.md` for the working rules (notably: hypotheses before bug fixes).
 
 | | |
 |---|---|
-| **Phase** | **Phase 0 complete and merged to `main`.** Moving to Phase 1 (measured quality) |
-| **Active file** | `Kaggle/hebrew-diarization.ipynb` |
-| **Blocking next step** | Run on a real interview; then Phase 1.2 (WER) and 1.3 (ivrit-ai vs plain large-v3) |
+| **Phase** | **Phase 0 done, Phase 3.1 done.** Both notebooks proven on Kaggle and live on `main`. Everything structural is now verified; what is left is *quality* |
+| **Active files** | `Kaggle/hebrew-diarization.ipynb` (speakers, needs HF token), `Kaggle/hebrew-transcription.ipynb` (no account needed) |
+| **Blocking next step** | Nothing is blocked. The project is usable today. Next value is Phase 1.2 (WER) and 1.3 (ivrit-ai vs plain large-v3) |
 | **Last updated** | 2026-08-01 (session 3) |
 
 ---
@@ -42,6 +42,7 @@ still unrun.
 | Kaggle free tier gives 2x Tesla T4, 15 GB VRAM each | `nvidia-smi`, 2026-08-01 |
 | **The notebook runs end to end on Kaggle** | Full run 2026-08-01. 3.5 min WhatsApp screen recording in, txt + srt out, downloaded successfully |
 | **Automatic speaker counting was correct** | Detected 3 speakers with no hint given; user confirmed the call genuinely had 3. This is the payoff for community-1 over the old fixed-`num_speakers` approach, which would have forced 3 people into however many buckets were guessed |
+| **`hebrew-transcription.ipynb` runs end to end on Kaggle** | Confirmed by the user 2026-08-01, the run after it was built. Both notebooks are now proven on real hardware |
 | ffmpeg correctly strips video and keeps audio | The input was an `.mp4` screen recording; cell 6 reported 3.5 min of audio |
 | **Throughput is ~9.5x realtime end to end** | 3.5 min audio → 22s total (9s transcribe, 12s diarize) on one T4. Extrapolates to ~6 min per hour of audio |
 | Both models fit comfortably on one T4 | No OOM at 15 GB with both loaded |
@@ -64,8 +65,8 @@ GPU            Tesla T4 x2
 | Hebrew accuracy as a **number** | User read the first transcript and called it "pretty good" — a real signal, and the first evidence that the Hebrew works at all, but not a measurement. Phase 1.2 (WER against a ground truth) is still the thing that would make this a claim rather than an impression. |
 | Whether the ivrit-ai finetune beats plain `large-v3` | Still untested. "Pretty good" does not tell us whether the standard model would have been equally good. Phase 1.3. |
 | Speaker counting on *harder* audio | It got 3/3 right on this call. One sample. Two speakers with similar voices, or heavy background noise, are the cases that would break it. |
-| **`hebrew-transcription.ipynb` runs at all** | Built 2026-08-01, **never executed on Kaggle**. Its logic is 24/24 on unit tests and its shared parts are lifted from the proven notebook, but that is not the same as having run. Needs one real run before being shared with anyone. |
 | That `NUM_SPEAKERS = 1` is accepted by pyannote | Suggested as the single-speaker workaround but never tried. Some clustering implementations reject `n_clusters=1`. Moot now that a dedicated notebook exists, but the claim was made and never checked. |
+| Paragraph grouping reads well on *long* audio | The 45s / 2s pause thresholds are unit-tested and were fine on a short file. Whether they produce sensible paragraphs across a two-hour lecture is a judgement call nobody has made yet. |
 | large-v3-turbo + community-1 fit together in 16 GB VRAM | Should be comfortable on paper (~1.6 GB + ~1 GB), never measured. |
 | Hebrew transcription quality is actually better than vanilla Whisper | Claimed by ivrit.ai and third-party comparisons; not measured on the user's own audio. |
 | Diarization auto-detects the right speaker count on real interviews | Depends entirely on recording quality. |
@@ -97,6 +98,22 @@ see the log entry below.
 ---
 
 ## Log
+
+### 2026-08-01 — Session 4b: transcription notebook verified
+
+**`hebrew-transcription.ipynb` runs end to end on Kaggle**, confirmed by the
+user on the first attempt. Both notebooks are now proven on real hardware.
+
+That closes the last *structural* unknown in the project. Everything still in
+the unverified table is now about **quality** rather than whether things work:
+the Hebrew word error rate, whether the ivrit-ai finetune actually beats plain
+`large-v3`, whether speaker counting holds up on harder audio, and whether the
+paragraph thresholds read well across a two-hour recording.
+
+Worth stating plainly, because it changes what "done" means from here: the
+project is **usable today**. Nothing is blocked. Phase 1 is no longer about
+making it work, it is about finding out how good it is — which is optional in a
+way that Phase 0 never was.
 
 ### 2026-08-01 — Session 4: token-free transcription notebook
 
