@@ -11,9 +11,9 @@ See `CLAUDE.md` for the working rules (notably: hypotheses before bug fixes).
 
 | | |
 |---|---|
-| **Phase** | **Phase 0 done, Phase 3.1 done.** Both notebooks proven on Kaggle and live on `main`. Everything structural is now verified; what is left is *quality* |
+| **Phase** | **Phase 0 and 3.1 done; both notebooks feature-complete and verified on Kaggle.** What remains is measurement, not construction |
 | **Active files** | `Kaggle/hebrew-diarization.ipynb` (speakers, needs HF token), `Kaggle/hebrew-transcription.ipynb` (no account needed) |
-| **Blocking next step** | Nothing is blocked. The project is usable today. Next value is Phase 1.2 (WER) and 1.3 (ivrit-ai vs plain large-v3) |
+| **Blocking next step** | Nothing is blocked. Next value is Phase 1.2 (WER) and 1.3 (ivrit-ai vs plain large-v3) |
 | **Last updated** | 2026-08-01 (session 3) |
 
 ---
@@ -43,6 +43,9 @@ still unrun.
 | **The notebook runs end to end on Kaggle** | Full run 2026-08-01. 3.5 min WhatsApp screen recording in, txt + srt out, downloaded successfully |
 | **Automatic speaker counting was correct** | Detected 3 speakers with no hint given; user confirmed the call genuinely had 3. This is the payoff for community-1 over the old fixed-`num_speakers` approach, which would have forced 3 people into however many buckets were guessed |
 | **`hebrew-transcription.ipynb` runs end to end on Kaggle** | Confirmed by the user 2026-08-01, the run after it was built. Both notebooks are now proven on real hardware |
+| **Automatic input discovery works on Kaggle** | Confirmed 2026-08-01. `INPUT_DIR = None` found the recordings with no path typed |
+| **All five output formats are produced** | Confirmed 2026-08-01 with `OUTPUT_FORMATS = "all"`. The writing cell lists each file it creates |
+| **The GPU check cell behaves correctly** | Confirmed in both directions: it raised with instructions on a CPU-only session, and passed once the accelerator was set |
 | ffmpeg correctly strips video and keeps audio | The input was an `.mp4` screen recording; cell 6 reported 3.5 min of audio |
 | **Throughput is ~9.5x realtime end to end** | 3.5 min audio → 22s total (9s transcribe, 12s diarize) on one T4. Extrapolates to ~6 min per hour of audio |
 | Both models fit comfortably on one T4 | No OOM at 15 GB with both loaded |
@@ -67,8 +70,9 @@ GPU            Tesla T4 x2
 | Speaker counting on *harder* audio | It got 3/3 right on this call. One sample. Two speakers with similar voices, or heavy background noise, are the cases that would break it. |
 | That `NUM_SPEAKERS = 1` is accepted by pyannote | Suggested as the single-speaker workaround but never tried. Some clustering implementations reject `n_clusters=1`. Moot now that a dedicated notebook exists, but the claim was made and never checked. |
 | Paragraph grouping reads well on *long* audio | The 45s / 2s pause thresholds are unit-tested and were fine on a short file. Whether they produce sensible paragraphs across a two-hour lecture is a judgement call nobody has made yet. |
-| **The session-5 usability changes work on Kaggle** | Auto-discovery, the five output formats, the timestamps switch and the Kaggle badges are covered by 110 unit tests but have **never been run**. Auto-discovery in particular touches `/kaggle/input` behaviour that cannot be reproduced locally. |
+| That `vtt`, `tsv` and `json` load correctly in their **target applications** | The files are written and their structure is unit-tested, but nobody has opened a `.vtt` in a video player, a `.tsv` in Excel, or parsed the `.json` from another program. Format bugs of the kind unit tests miss (encoding, BOM expectations, header quirks) would only show up there. |
 | Whether files can actually be dropped into `/kaggle/working/audio` via the UI | The folder is created and searched, so it costs nothing if unsupported, but nobody has confirmed Kaggle's file browser allows uploads there. Datasets remain the documented route. |
+| Behaviour when several datasets are attached at once | Auto-discovery searches all of `/kaggle/input`, so unrelated attached datasets containing media would also be transcribed. Not yet seen in practice. |
 | large-v3-turbo + community-1 fit together in 16 GB VRAM | Should be comfortable on paper (~1.6 GB + ~1 GB), never measured. |
 | Hebrew transcription quality is actually better than vanilla Whisper | Claimed by ivrit.ai and third-party comparisons; not measured on the user's own audio. |
 | Diarization auto-detects the right speaker count on real interviews | Depends entirely on recording quality. |
@@ -100,6 +104,27 @@ see the log entry below.
 ---
 
 ## Log
+
+### 2026-08-01 — Session 6: usability changes verified on Kaggle
+
+A single re-import and run confirmed the whole of sessions 5 and 6 at once:
+automatic input discovery, all five output formats, the timestamps switch, the
+Kaggle badges, and the GPU check.
+
+The GPU check was confirmed in **both** directions, which is the more useful
+result: it raised with instructions on a CPU-only session, then passed once the
+accelerator was set. A guard that has only ever been seen not firing is not
+really tested.
+
+**Both notebooks are now feature-complete and verified.** Everything the user
+asked for is built and working on free hardware. What is left in the unverified
+table has narrowed to genuinely secondary questions — whether `vtt`/`tsv`/`json`
+behave in their target applications as opposed to being structurally correct,
+and what happens with several datasets attached at once.
+
+The project has moved from construction to measurement. Phases 1.2 and 1.3 (word
+error rate, and ivrit-ai against plain `large-v3`) are the only items left with
+real value, and both are optional.
 
 ### 2026-08-01 — Session 5: usability pass on both notebooks
 
