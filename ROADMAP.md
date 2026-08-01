@@ -7,10 +7,18 @@ Status lives in `MEMORY.md`. Working rules live in `CLAUDE.md`.
 
 ---
 
-## Phase 0 — Prove it runs
+## Phase 0 — Prove it runs ✅ COMPLETE (2026-08-01)
 
 **Goal:** one short file goes in, a transcript with speaker labels comes out.
 **Blocks:** everything.
+
+**Outcome:** passed. A 3.5 min recording produced txt + srt at ~9.5x realtime.
+Two failures were hit and resolved without any repo change — a read-only
+`/kaggle/input` misunderstanding, and a stale-numpy `ImportError` fixed by
+restarting the session. The cuDNN risk below never materialised.
+
+**Carried forward:** the notebook still lacks a documented "restart the session
+after installing" step, which every cold user will need. See Phase 2.4.
 
 | # | Task | Done when |
 |---|---|---|

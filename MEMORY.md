@@ -11,9 +11,9 @@ See `CLAUDE.md` for the working rules (notably: hypotheses before bug fixes).
 
 | | |
 |---|---|
-| **Phase** | Rebuilt diarization notebook written, awaiting first real run |
+| **Phase** | **Phase 0 complete** — notebook runs end to end on Kaggle. Moving to Phase 1 (quality) |
 | **Active file** | `Kaggle/hebrew-diarization.ipynb` |
-| **Blocking next step** | User runs cells 3 onward on Kaggle and reports output |
+| **Blocking next step** | Confirm whether the 3rd detected speaker is real or an artifact |
 | **Last updated** | 2026-08-01 (session 3) |
 
 ---
@@ -40,6 +40,10 @@ still unrun.
 | **cuDNN is compatible — no pin needed** | cuDNN 9.10.2 (`91002`) against ctranslate2 4.8.1, which wants cuDNN 9. They match |
 | **float16 is safe on the assigned GPU** | Tesla T4, compute capability 7.5, has FP16 tensor cores |
 | Kaggle free tier gives 2x Tesla T4, 15 GB VRAM each | `nvidia-smi`, 2026-08-01 |
+| **The notebook runs end to end on Kaggle** | Full run 2026-08-01. 3.5 min WhatsApp screen recording in, txt + srt out, downloaded successfully |
+| ffmpeg correctly strips video and keeps audio | The input was an `.mp4` screen recording; cell 6 reported 3.5 min of audio |
+| **Throughput is ~9.5x realtime end to end** | 3.5 min audio → 22s total (9s transcribe, 12s diarize) on one T4. Extrapolates to ~6 min per hour of audio |
+| Both models fit comfortably on one T4 | No OOM at 15 GB with both loaded |
 
 Environment as actually observed on Kaggle, 2026-08-01:
 
@@ -56,8 +60,8 @@ GPU            Tesla T4 x2
 
 | Claim | Why it's uncertain |
 |---|---|
-| The notebook runs end to end | Cells 1-2 confirmed on Kaggle. Everything from the token cell onward is still unrun. |
-| numpy 2.5.1 coexists with numba 0.60.0, which requires numpy<2.1 | Flagged by pip on install. pyannote can reach numba via librosa. **Pre-registered as the next likely failure**: if a numpy/numba error appears, restart the session and re-run from cell 2 before considering any version pin. |
+| Transcription quality on Hebrew | The pipeline produced output; the *accuracy* of that output has not been judged yet. Phase 1. |
+| Whether automatic speaker counting is trustworthy | First run detected 3 speakers in a WhatsApp screen recording. Unknown whether that is correct. See open question 1. |
 | large-v3-turbo + community-1 fit together in 16 GB VRAM | Should be comfortable on paper (~1.6 GB + ~1 GB), never measured. |
 | Hebrew transcription quality is actually better than vanilla Whisper | Claimed by ivrit.ai and third-party comparisons; not measured on the user's own audio. |
 | Diarization auto-detects the right speaker count on real interviews | Depends entirely on recording quality. |
@@ -66,7 +70,14 @@ GPU            Tesla T4 x2
 
 ## Open questions
 
-1. Does the notebook survive a cold Kaggle run? (Blocks everything else.)
+1. **Is the 3rd speaker in the first test run real?** The recording is a WhatsApp
+   screen capture; pyannote reported `SPEAKER_00/01/02`. Two candidate
+   explanations, and a cheap test that separates them: print blocks and total
+   airtime per speaker. A sub-second single block points at the NaN-embedding
+   artifact behind the `std(): degrees of freedom is <= 0` warning; meaningful
+   airtime means a genuine third voice, plausibly someone on a phone speaker.
+   If artifact, `NUM_SPEAKERS = 2` is the workaround, and a minimum-segment-length
+   filter is the real fix.
 2. Should the other three Colab notebooks (`Whisper_Audio`, `Whisper_Video`,
    `Whisper_from_Youtube`) get the same treatment, or is diarization the only
    one the user actually needs?
@@ -84,6 +95,37 @@ see the log entry below.
 ---
 
 ## Log
+
+### 2026-08-01 — Session 3b: Phase 0 complete, full run succeeded
+
+**The notebook works end to end.** A 3.5 minute WhatsApp screen recording went
+in; 68 segments / 394 words were transcribed, 114 diarization turns were
+merged into 27 speaker blocks, and txt + srt came out and downloaded cleanly.
+
+**The numpy failure was H1, confirmed by the cheapest test.** Cell 7 died with
+`ImportError: cannot import name '_center' from 'numpy._core.umath'` — numpy's
+Python files and its compiled extension disagreeing, because the kernel had
+imported the old numpy before our install upgraded it to 2.5.1. Restarting the
+session fixed it. No pin, no force-reinstall, no repo change. That is now twice
+in one session that the diagnostic beat the plausible-looking fix.
+
+Consequence: **the notebook needs a documented restart step after the install
+cell.** Any user hitting this cold will see the same crash. Not yet actioned.
+
+**Two warnings in cell 9, both benign:**
+
+- *TF32 disabled (ReproducibilityWarning).* pyannote turns TF32 off and suggests
+  re-enabling it. On this hardware the suggestion is meaningless: TF32 requires
+  Ampere (compute 8.0+), and the T4 is Turing at 7.5. There is no TF32 to enable.
+  Do not follow the advice.
+- *`std(): degrees of freedom is <= 0`.* A segment collapsed to a single frame
+  after downsampling, so its embedding is NaN. Note that the original notebook's
+  `np.nan_to_num(embeddings)` was papering over exactly this failure mode. It is
+  the leading suspect for the possibly-spurious third speaker.
+
+**Measured throughput: ~9.5x realtime**, 22s for 3.5 min of audio on one T4.
+About 6 minutes per hour of audio, so a 2 hour interview is ~13 minutes. The
+30 hr/week quota will not be the binding constraint.
 
 ### 2026-08-01 — Session 3: first Kaggle run, cuDNN risk resolved
 
