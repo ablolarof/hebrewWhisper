@@ -4,12 +4,25 @@
 <blockquote>
 <h3>⚠️ פורק מעודכן (2026)</h3>
 <p>מאגר זה הוא <a href="https://github.com/Sourasky-DHLAB/Whisper">פורק</a> של המאגר המקורי של הספרייה המרכזית ע"ש סוראסקי. המחברות המקוריות בתיקיית <code>Colab</code> <b>אינן פועלות עוד</b> — הן מקבעות גרסאות ישנות של PyTorch שאינן נתמכות בגרסאות Python הנוכחיות של Colab.</p>
-<p><b>מחברת מעודכנת ופועלת לתמלול וזיהוי דוברים:</b> <a href="Kaggle/hebrew-diarization.ipynb">Kaggle/hebrew-diarization.ipynb</a></p>
+
+<h3>מחברות מעודכנות ופועלות — איזו לבחור?</h3>
+<table>
+<thead><tr><th></th><th>תמלול בלבד</th><th>תמלול + זיהוי דוברים</th></tr></thead>
+<tbody>
+<tr><td><b>מחברת</b></td><td><a href="Kaggle/hebrew-transcription.ipynb">hebrew-transcription.ipynb</a></td><td><a href="Kaggle/hebrew-diarization.ipynb">hebrew-diarization.ipynb</a></td></tr>
+<tr><td><b>מתאים ל</b></td><td>הרצאות, נאומים, פודקאסטים, כל הקלטה שבה לא חשוב מי מדבר</td><td>ראיונות, שיחות, דיונים — כשצריך לדעת מי אמר מה</td></tr>
+<tr><td><b>הרשמה נדרשת</b></td><td><b>אין.</b> רק חשבון Kaggle חינמי</td><td>גם חשבון <a href="https://huggingface.co">Hugging Face</a> חינמי (לצורך מודל זיהוי הדוברים)</td></tr>
+<tr><td><b>מהירות</b></td><td>מהירה יותר — כ-4 דקות לשעת אודיו</td><td>כ-6 דקות לשעת אודיו</td></tr>
+</tbody>
+</table>
+<p>בספק? התחילו ב-<a href="Kaggle/hebrew-transcription.ipynb">hebrew-transcription.ipynb</a> — היא פשוטה יותר ואינה דורשת דבר מלבד חשבון Kaggle.</p>
+
+<h3>מה משותף לשתיהן</h3>
 <ul>
-<li>רצה על <b>Kaggle</b> (כ-30 שעות GPU חינם בשבוע) במקום Google Colab</li>
-<li>משתמשת ב-<a href="https://huggingface.co/ivrit-ai/whisper-large-v3-turbo-ct2">ivrit-ai/whisper-large-v3-turbo-ct2</a> — מודל שכוונן לעברית, מדויק בהרבה מ-Whisper הרגיל</li>
-<li>זיהוי דוברים באמצעות <a href="https://huggingface.co/pyannote/speaker-diarization-community-1">pyannote community-1</a> — מזהה החלפת דובר גם באמצע משפט, ללא צורך לדעת מראש כמה דוברים יש</li>
-<li>מקבלת כל פורמט אודיו/וידאו — אין צורך להמיר ל-WAV ידנית</li>
+<li>רצות על <b>Kaggle</b> (כ-30 שעות GPU חינם בשבוע) במקום Google Colab</li>
+<li>משתמשות ב-<a href="https://huggingface.co/ivrit-ai/whisper-large-v3-turbo-ct2">ivrit-ai/whisper-large-v3-turbo-ct2</a> — מודל שכוונן לעברית, מדויק בהרבה מ-Whisper הרגיל</li>
+<li>מקבלות כל פורמט אודיו/וידאו — אין צורך להמיר ל-WAV ידנית</li>
+<li>מפיקות קובץ טקסט וקובץ כתוביות (<code>srt</code>), מיושרים נכון לעברית</li>
 </ul>
 <p>המחברות המקוריות נשמרו בתיקיית <code>Colab</code> לצורך השוואה בלבד.</p>
 </blockquote>

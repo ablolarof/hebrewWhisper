@@ -123,7 +123,8 @@ no longer run.
 
 | Path | Status |
 |---|---|
-| `Kaggle/hebrew-diarization.ipynb` | **Active.** The rebuilt diarization notebook. Work here. |
+| `Kaggle/hebrew-diarization.ipynb` | **Active.** Transcription + speaker labels. Needs a HF token. |
+| `Kaggle/hebrew-transcription.ipynb` | **Active.** Transcription only, no account needed. The one to hand to other people. |
 | `Kaggle/kaggle-whisper-audio.ipynb` | Upstream. Plain transcription, no diarization. Mostly still sound. |
 | `Colab/*.ipynb` | Upstream. **Broken.** Kept for reference only — do not try to repair in place. |
 | `OtherASRs/*.ipynb` | Upstream. Unrelated experiments (Meta MMS, SpeechBrain Amharic). |
@@ -205,3 +206,20 @@ without the user asking — the fork is public.
   (technical notes, troubleshooting). That split is intentional.
 - Keep the config in one cell near the top. Users should not have to hunt
   through the notebook to change a path or a model.
+
+---
+
+## The two notebooks share code by duplication, not by import
+
+`hebrew-transcription.ipynb` repeats the ffmpeg prep, file discovery, error
+messages, timestamp formatting and RTL output from `hebrew-diarization.ipynb`.
+
+That is deliberate. A Kaggle notebook has to be self-contained — a shared module
+would mean users cloning a repo before they could run anything, which defeats
+the point of the token-free notebook existing at all.
+
+The cost is real: **a fix to shared logic must be applied to both.** The
+duplicated parts are the ones with test coverage, so a change to timestamp
+formatting or output writing should be made in both build scripts and re-tested
+against both. If the duplication grows much past its current size, revisit —
+but do not trade away self-containedness cheaply.

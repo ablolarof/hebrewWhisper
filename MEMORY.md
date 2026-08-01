@@ -64,6 +64,8 @@ GPU            Tesla T4 x2
 | Hebrew accuracy as a **number** | User read the first transcript and called it "pretty good" — a real signal, and the first evidence that the Hebrew works at all, but not a measurement. Phase 1.2 (WER against a ground truth) is still the thing that would make this a claim rather than an impression. |
 | Whether the ivrit-ai finetune beats plain `large-v3` | Still untested. "Pretty good" does not tell us whether the standard model would have been equally good. Phase 1.3. |
 | Speaker counting on *harder* audio | It got 3/3 right on this call. One sample. Two speakers with similar voices, or heavy background noise, are the cases that would break it. |
+| **`hebrew-transcription.ipynb` runs at all** | Built 2026-08-01, **never executed on Kaggle**. Its logic is 24/24 on unit tests and its shared parts are lifted from the proven notebook, but that is not the same as having run. Needs one real run before being shared with anyone. |
+| That `NUM_SPEAKERS = 1` is accepted by pyannote | Suggested as the single-speaker workaround but never tried. Some clustering implementations reject `n_clusters=1`. Moot now that a dedicated notebook exists, but the claim was made and never checked. |
 | large-v3-turbo + community-1 fit together in 16 GB VRAM | Should be comfortable on paper (~1.6 GB + ~1 GB), never measured. |
 | Hebrew transcription quality is actually better than vanilla Whisper | Claimed by ivrit.ai and third-party comparisons; not measured on the user's own audio. |
 | Diarization auto-detects the right speaker count on real interviews | Depends entirely on recording quality. |
@@ -95,6 +97,50 @@ see the log entry below.
 ---
 
 ## Log
+
+### 2026-08-01 — Session 4: token-free transcription notebook
+
+**Built `Kaggle/hebrew-transcription.ipynb`** — transcription only, no speaker
+labels, and critically **no Hugging Face account required**.
+
+*Why it was built at all.* The first answer to "can the diarization notebook
+handle a single speaker?" was: yes, set `NUM_SPEAKERS = 1`, and don't build a
+second notebook until the need is demonstrated rather than assumed. The user
+then gave the one reason that setting cannot address — they want to share this
+with other people. A token-free notebook is a different product, not a config
+flag: `NUM_SPEAKERS = 1` still requires an HF account, terms acceptance and a
+Kaggle secret before anything runs. That justified the build; the earlier
+reasoning would still have been right without it.
+
+*What it drops:* pyannote entirely, the token cell, and word-level timestamps
+(only needed for matching words to speaker turns). Roughly 4 min per hour of
+audio versus 6.
+
+*What it adds:* paragraph grouping. With no speakers to break on, one line per
+Whisper segment is a choppy wall of fragments — 68 of them for 3.5 minutes. New
+paragraphs start after a 2s pause or once a paragraph exceeds 45s. 24/24 unit
+tests, including that a whitespace-only segment cannot silently extend a
+paragraph's end timestamp.
+
+**Found an unused dependency in the diarization notebook.** It installed
+`srt>=3.5` but never imported it — `write_srt` writes the format by hand.
+Removed from both, and the validator now checks that every pip-installed package
+is actually referenced, so this cannot recur silently.
+
+**Added the numpy restart note to both notebooks**, clearing carried debt from
+session 3b. Written conditionally ("if a later cell fails with...") rather than
+as a mandatory step, since forcing a restart on every user for something that may
+be specific to a cold session would be worse than explaining it.
+
+**Documented the duplication decision in `CLAUDE.md`.** The two notebooks repeat
+ffmpeg prep, file discovery, timestamps and RTL output rather than importing a
+shared module, because a Kaggle notebook must be self-contained — a module would
+force users to clone a repo first, defeating the purpose of the token-free
+notebook. The cost is that shared fixes must be applied twice, and that is now
+written where it will be seen.
+
+**Not run on Kaggle.** Its logic is tested and its shared parts are lifted from
+the proven notebook, but it has never executed. Recorded as unverified.
 
 ### 2026-08-01 — Session 3b: Phase 0 complete, full run succeeded
 

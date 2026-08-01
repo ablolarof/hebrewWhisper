@@ -104,7 +104,7 @@ evidence behind it.
 
 | # | Task | Notes |
 |---|---|---|
-| 3.1 | Kaggle version of `Whisper_Audio.ipynb` | Simplest case, no diarization. Mostly a cut-down of the working notebook |
+| 3.1 | ~~Kaggle version of `Whisper_Audio.ipynb`~~ | **Done 2026-08-01** as `Kaggle/hebrew-transcription.ipynb`. Built early, out of phase order, because the user wants to share this with people who should not need a Hugging Face account — which a `NUM_SPEAKERS = 1` setting cannot deliver. **Untested on Kaggle.** |
 | 3.2 | Kaggle version of `Whisper_Video.ipynb` | ffmpeg handling already solved in the diarization notebook |
 | 3.3 | Decide on `Whisper_from_Youtube.ipynb` | **Flagged:** YouTube blocks datacentre IPs, so `yt-dlp` frequently fails from Kaggle regardless of code quality. Also a ToS question. May be better dropped than half-fixed |
 | 3.4 | Rewrite the Hebrew README around the new notebooks | Currently only a banner points at the new work |
