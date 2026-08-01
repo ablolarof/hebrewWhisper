@@ -46,6 +46,7 @@ still unrun.
 | **Automatic input discovery works on Kaggle** | Confirmed 2026-08-01. `INPUT_DIR = None` found the recordings with no path typed |
 | **All five output formats are produced** | Confirmed 2026-08-01 with `OUTPUT_FORMATS = "all"`. The writing cell lists each file it creates |
 | **The GPU check cell behaves correctly** | Confirmed in both directions: it raised with instructions on a CPU-only session, and passed once the accelerator was set |
+| **Reverting the numpy pin restored a fast install** | Confirmed 2026-08-01. The unpinned install completes normally with no backtracking, and the install-then-restart-then-run flow works end to end on a cold session |
 | ffmpeg correctly strips video and keeps audio | The input was an `.mp4` screen recording; cell 6 reported 3.5 min of audio |
 | **Throughput is ~9.5x realtime end to end** | 3.5 min audio → 22s total (9s transcribe, 12s diarize) on one T4. Extrapolates to ~6 min per hour of audio |
 | Both models fit comfortably on one T4 | No OOM at 15 GB with both loaded |
@@ -70,7 +71,7 @@ GPU            Tesla T4 x2
 | Speaker counting on *harder* audio | It got 3/3 right on this call. One sample. Two speakers with similar voices, or heavy background noise, are the cases that would break it. |
 | That `NUM_SPEAKERS = 1` is accepted by pyannote | Suggested as the single-speaker workaround but never tried. Some clustering implementations reject `n_clusters=1`. Moot now that a dedicated notebook exists, but the claim was made and never checked. |
 | Paragraph grouping reads well on *long* audio | The 45s / 2s pause thresholds are unit-tested and were fine on a short file. Whether they produce sensible paragraphs across a two-hour lecture is a judgement call nobody has made yet. |
-| **That the STOP box actually appears** | The numpy-change detection is straightforward code but has not run on Kaggle. If `importlib.invalidate_caches()` is insufficient to see the new version from the same process, the box would silently not print and we would be back to the bare ImportError. |
+| **That the STOP box actually appears** | The cold-session run on 2026-08-01 succeeded, but the user restarted as instructed by chat rather than necessarily by the box, so this is *not* settled. If `importlib.invalidate_caches()` cannot see the new version from the same process, the box silently never prints and anyone running this without guidance lands on the bare ImportError. **This is the mechanism the notebook's shareability depends on** — worth confirming by eye on the next cold run. If it did not print, read numpy's version from a subprocess instead, which caching cannot fool. |
 | That `vtt`, `tsv` and `json` load correctly in their **target applications** | The files are written and their structure is unit-tested, but nobody has opened a `.vtt` in a video player, a `.tsv` in Excel, or parsed the `.json` from another program. Format bugs of the kind unit tests miss (encoding, BOM expectations, header quirks) would only show up there. |
 | Whether files can actually be dropped into `/kaggle/working/audio` via the UI | The folder is created and searched, so it costs nothing if unsupported, but nobody has confirmed Kaggle's file browser allows uploads there. Datasets remain the documented route. |
 | Behaviour when several datasets are attached at once | Auto-discovery searches all of `/kaggle/input`, so unrelated attached datasets containing media would also be transcribed. Not yet seen in practice. |
@@ -105,6 +106,19 @@ see the log entry below.
 ---
 
 ## Log
+
+### 2026-08-01 — Session 8: revert confirmed working
+
+The unpinned install plus restart flow ran cleanly on a cold session. No
+backtracking, no hang, and the notebook completed. Both notebooks are back to
+working with every feature in place.
+
+**One thing deliberately left open.** The run confirms the *flow*, not the STOP
+box: the user restarted because chat told them to, not necessarily because the
+box appeared. Whether it printed is unconfirmed, and it is the mechanism the
+whole shareability story rests on — someone receiving this notebook has no chat
+transcript telling them to restart. Recorded as unverified rather than assumed
+from a successful run.
 
 ### 2026-08-01 — Session 7: numpy root cause found and pinned
 
